@@ -1,0 +1,6 @@
+{
+  "appId": "com.tonnom.cubedash",
+  "appName": "Cube Dash",
+  "webDir": "www",
+  "server": { "androidScheme": "https" }
+}
