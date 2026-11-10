@@ -1,0 +1,67 @@
+
+name: Cube Dash - AAB Builder
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download project
+        uses: actions/checkout@v4
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Prepare HTML
+        run: |
+          mkdir -p www
+          if [ -f index.html ]; then
+            cp index.html www/
+          elif [ -f www/index.html ]; then
+            echo "HTML already prepared"
+          else
+            echo "ERROR: index.html not found"
+            exit 1
+          fi
+          for d in assets css js images; do
+            if [ -d "$d" ]; then
+              cp -r "$d" www/
+            fi
+          done
+
+      - name: Install Capacitor
+        run: |
+          npm init -y
+          npm install @capacitor/core @capacitor/android @capacitor/cli
+
+      - name: Configure Android
+        run: |
+          npx cap init "Cube Dash" "com.anuar.cubedash" --web-dir=www
+          npx cap add android
+
+      - name: Build AAB
+        run: |
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew bundleRelease
+
+      - name: Download AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cube-Dash-AAB
+          path: android/app/build/outputs/bundle/release/*.aab
